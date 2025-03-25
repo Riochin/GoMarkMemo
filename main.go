@@ -1,13 +1,15 @@
 package main
 
-import(
+import (
 	"fmt"
-	"net/http"
 	"html/template"
+	"net/http"
 
-	"log"
 	"encoding/json"
+	"log"
 	"os"
+
+	"strconv"
 )
 
 type Memo struct {
@@ -77,6 +79,30 @@ func saveMemos() {
 	encoder.Encode(memos)
 }
 
+func deleteMemoHandler(w http.ResponseWriter, r *http.Request){
+	if r.Method != http.MethodPost {
+		http.Error(w, "無効なリクエストです", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// フォームデータを取得
+	indexStr := r.FormValue("index")
+	index, err := strconv.Atoi(indexStr)
+	if err != nil || index < 0 || index >= len(memos) {
+		http.Error(w, "無効なインデックス", http.StatusBadRequest)
+		return
+	}
+
+	// メモを削除（スライスから削除）
+	memos = append(memos[:index], memos[index+1:]...)
+
+	// JSONファイルに保存
+	saveMemos()
+
+	// メモ一覧にリダイレクト
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 
 func main() {
 	// メモ一覧をロード
@@ -84,6 +110,7 @@ func main() {
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/create", createHandler)
+	http.HandleFunc("/delete", deleteMemoHandler)
 
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
