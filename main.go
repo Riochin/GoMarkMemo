@@ -1,6 +1,7 @@
 package main
 
 import (
+	markdown "example/hello/internal"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 
 type Memo struct {
 	Title string `json:"title"`
+	Content string `json:"content"`
+	ContentHTML template.HTML `json:"-"`
 }
 
 var memos []Memo
@@ -46,13 +49,14 @@ func createHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		// フォームデータを取得
 		title := r.FormValue("title")
-		if title == "" {
-			http.Error(w, "タイトルが空です", http.StatusBadRequest)
+		content := r.FormValue("content")
+		if title == "" || content == "" {	
+			http.Error(w, "タイトルまたは内容が空です", http.StatusBadRequest)
 			return
 		}
 
 		// 新しいメモを追加
-		newMemo := Memo{Title: title}
+		newMemo := Memo{Title: title, Content: content}
 		memos = append(memos, newMemo)
 
 		// JSONファイルに保存
@@ -103,6 +107,26 @@ func deleteMemoHandler(w http.ResponseWriter, r *http.Request){
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func viewHandler(w http.ResponseWriter, r *http.Request){
+	indexStr := r.URL.Query().Get("index")
+	index, err := strconv.Atoi(indexStr)
+	if err != nil || index < 0 || index >= len(memos){
+		http.Error(w, "無効なインデックス", http.StatusBadRequest)
+		return
+	}
+	// MarkdownをHTMLに変換し、エスケープを防ぐ
+	memo := memos[index]
+	memo.ContentHTML = template.HTML(markdown.ToHTML(memo.Content))
+
+	// テンプレートを読み込んで表示
+	tmpl, err := template.ParseFiles("templates/view.html")
+	if err != nil {
+		http.Error(w, "テンプレート読み込みエラー", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, memo)
+}
+
 
 func main() {
 	// メモ一覧をロード
@@ -111,6 +135,7 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/create", createHandler)
 	http.HandleFunc("/delete", deleteMemoHandler)
+	http.HandleFunc("/view", viewHandler)
 
 	fmt.Println("Server started at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
