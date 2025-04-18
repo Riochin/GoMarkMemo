@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>メモ編集</title>
+  </head>
+  <body>
+    <h1>メモを編集</h1>
+    <form action="/edit" method="POST">
+      <input type="hidden" name="index" value="{{.Index}}" />
+      <input type="text" name="title" value="{{.Title}}" required />
+      <textarea name="content" required>{{.Content}}</textarea>
+      <button type="submit">保存</button>
+    </form>
+    <br />
+    <a href="/">メモ一覧に戻る</a>
+  </body>
+</html>
