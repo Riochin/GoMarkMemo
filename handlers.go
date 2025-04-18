@@ -2,10 +2,10 @@ package main
 
 import (
 	"html/template"
+	"mymodule/internal"
 	"net/http"
 	"strconv"
 )
-import "mymodule/internal"
 
 // メモ一覧ページ
 func indexHandler(w http.ResponseWriter, r *http.Request) {
