@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	
+	// "mymodule/internal"
 )
 
 func main() {
