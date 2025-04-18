@@ -10,7 +10,7 @@
     <ul>
       {{range $index, $memo := .}}
       <li>
-        {{ $memo.Title }}
+        <a href="/view?index={{ $index }}">{{ $memo.Title }}</a>
         <form action="/delete" method="POST" style="display: inline">
           <input type="hidden" name="index" value="{{ $index }}" />
           <button type="submit">削除</button>
